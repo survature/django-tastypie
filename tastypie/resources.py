@@ -2462,8 +2462,6 @@ class BaseModelResource(Resource):
 
                 setattr(related_obj, field_object.related_name, bundle.obj)
 
-            related_resource = field_object.get_related_resource(related_obj)
-
             # Before we build the bundle & try saving it, let's make sure we
             # haven't already saved it.
             if related_obj:
@@ -2476,6 +2474,7 @@ class BaseModelResource(Resource):
             if bundle.data.get(field_name):
                 if hasattr(bundle.data[field_name], 'keys'):
                     # Only build & save if there's data, not just a URI.
+                    related_resource = field_object.get_related_resource(related_obj)
                     related_bundle = related_resource.build_bundle(
                         obj=related_obj,
                         data=bundle.data.get(field_name),
@@ -2488,6 +2487,7 @@ class BaseModelResource(Resource):
                 elif field_object.related_name:
                     # This condition probably means a URI for a reverse
                     # relation was provided.
+                    related_resource = field_object.get_related_resource(related_obj)
                     related_bundle = related_resource.build_bundle(
                         obj=related_obj,
                         request=bundle.request,
