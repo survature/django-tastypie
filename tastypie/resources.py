@@ -1617,6 +1617,17 @@ class Resource(six.with_metaclass(DeclarativeMetaclass)):
         if len(deserialized[collection_name]) and 'put' not in self._meta.detail_allowed_methods:
             raise ImmediateHttpResponse(response=http.HttpMethodNotAllowed())
 
+        deleted_collection = deserialized.get(deleted_collection_name, [])
+
+        if deleted_collection:
+            if 'delete' not in self._meta.detail_allowed_methods:
+                raise ImmediateHttpResponse(response=http.HttpMethodNotAllowed())
+
+            for uri in deleted_collection:
+                obj = self.get_via_uri(uri, request=request)
+                bundle = self.build_bundle(obj=obj, request=request)
+                self.obj_delete(bundle=bundle)
+
         bundles_seen = []
 
         for data in deserialized[collection_name]:
@@ -1647,17 +1658,6 @@ class Resource(six.with_metaclass(DeclarativeMetaclass)):
                 self.obj_create(bundle=bundle)
 
             bundles_seen.append(bundle)
-
-        deleted_collection = deserialized.get(deleted_collection_name, [])
-
-        if deleted_collection:
-            if 'delete' not in self._meta.detail_allowed_methods:
-                raise ImmediateHttpResponse(response=http.HttpMethodNotAllowed())
-
-            for uri in deleted_collection:
-                obj = self.get_via_uri(uri, request=request)
-                bundle = self.build_bundle(obj=obj, request=request)
-                self.obj_delete(bundle=bundle)
 
         if not self._meta.always_return_data:
             return http.HttpAccepted()
